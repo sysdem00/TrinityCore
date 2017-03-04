@@ -18,12 +18,11 @@
 
 #include "Util.h"
 #include "Common.h"
-#include <boost/asio/ip/address.hpp>
-#include <utf8.h>
-#include <algorithm>
-#include <sstream>
-#include <cstdarg>
-#include <ctime>
+#include "CompilerDefs.h"
+#include "utf8.h"
+#include "Errors.h" // for ASSERT
+#include <stdarg.h>
+#include <boost/algorithm/string/case_conv.hpp>
 
 #if TRINITY_COMPILER == TRINITY_COMPILER_GNU
   #include <sys/socket.h>
@@ -150,7 +149,7 @@ int64 MoneyStringToMoney(const std::string& moneyString)
         if (gCount + sCount + cCount != 1)
             return 0;
 
-        uint64 amount = strtoull(*itr, nullptr, 10);
+        uint64 amount = atoull(*itr);
         if (gCount == 1)
             money += amount * 100 * 100;
         else if (sCount == 1)
@@ -172,8 +171,8 @@ uint32 TimeStringToSecs(const std::string& timestring)
     {
         if (isdigit(*itr))
         {
-            buffer *= 10;
-            buffer += *itr - '0';
+            buffer*=10;
+            buffer+= (*itr)-'0';
         }
         else
         {
@@ -185,9 +184,9 @@ uint32 TimeStringToSecs(const std::string& timestring)
                 case 's': multiplier = 1;       break;
                 default : return 0;                         //bad format
             }
-            buffer *= multiplier;
-            secs += buffer;
-            buffer = 0;
+            buffer*=multiplier;
+            secs+=buffer;
+            buffer=0;
         }
     }
 
@@ -215,9 +214,9 @@ bool IsIPAddress(char const* ipaddress)
     if (!ipaddress)
         return false;
 
-    boost::system::error_code error;
-    boost::asio::ip::address::from_string(ipaddress, error);
-    return !error;
+    // Let the big boys do it.
+    // Drawback: all valid ip address formats are recognized e.g.: 12.23, 121234, 0xABCD)
+    return inet_addr(ipaddress) != INADDR_NONE;
 }
 
 /// create PID file
@@ -374,16 +373,6 @@ bool WStrToUtf8(std::wstring const& wstr, std::string& utf8str)
 }
 
 typedef wchar_t const* const* wstrlist;
-
-void wstrToUpper(std::wstring& str)
-{
-    std::transform(str.begin(), str.end(), str.begin(), wcharToUpper);
-}
-
-void wstrToLower(std::wstring& str)
-{
-    std::transform(str.begin(), str.end(), str.begin(), wcharToLower);
-}
 
 std::wstring GetMainPartOfName(std::wstring const& wname, uint32 declension)
 {
@@ -569,7 +558,6 @@ void HexStrToByteArray(std::string const& str, uint8* out, bool reverse /*= fals
 
 bool StringToBool(std::string const& str)
 {
-    std::string lowerStr = str;
-    std::transform(str.begin(), str.end(), lowerStr.begin(), ::tolower);
+    std::string lowerStr = boost::algorithm::to_lower_copy(str);
     return lowerStr == "1" || lowerStr == "true" || lowerStr == "yes";
 }
