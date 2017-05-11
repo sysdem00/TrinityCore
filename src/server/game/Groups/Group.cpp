@@ -33,10 +33,12 @@
 #include "MapManager.h"
 #include "InstanceSaveMgr.h"
 #include "Util.h"
+#include "Random.h"
 #include "LFGMgr.h"
 #include "UpdateFieldFlags.h"
 #include "PartyPackets.h"
 #include "LootPackets.h"
+#include "UpdateData.h"
 
 Roll::Roll(ObjectGuid _guid, LootItem const& li) : itemGUID(_guid), itemid(li.itemid),
 itemRandomPropId(li.randomPropertyId), itemRandomSuffix(li.randomSuffix), itemCount(li.count),
